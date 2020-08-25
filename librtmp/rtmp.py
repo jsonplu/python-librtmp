@@ -10,7 +10,6 @@ from .packet import RTMPPacket, PACKET_TYPE_INVOKE, PACKET_SIZE_MEDIUM
 from .stream import RTMPStream
 from .utils import hash_swf
 
-
 __all__ = ["RTMP", "RTMPCall"]
 
 
@@ -44,11 +43,29 @@ class RTMP(object):
                     from the server. The default is 30.
     """
 
-    def __init__(self, url, playpath=None, tcurl=None, app=None, pageurl=None,
-                 auth=None, swfhash=None, swfsize=None, swfurl=None, swfvfy=None,
-                 flashver=None, subscribe=None, token=None, live=None, jtv=None,
-                 connect_data=None, socks=None, start=None, stop=None, buffer=None,
+    def __init__(self,
+                 url,
+                 playpath=None,
+                 tcurl=None,
+                 app=None,
+                 pageurl=None,
+                 auth=None,
+                 swfhash=None,
+                 swfsize=None,
+                 swfurl=None,
+                 swfvfy=None,
+                 flashver=None,
+                 subscribe=None,
+                 token=None,
+                 live=None,
+                 jtv=None,
+                 connect_data=None,
+                 socks=None,
+                 start=None,
+                 stop=None,
+                 buffer=None,
                  timeout=None):
+
         def set_opt(key, val):
             if val is not None:
                 self.set_option(key, val)
@@ -228,6 +245,10 @@ class RTMP(object):
         return RTMPStream(self, update_buffer=update_buffer)
 
     @property
+    def socket(self):
+        return librtmp.RTMP_Socket(self.rtmp)
+
+    @property
     def connected(self):
         """Returns True if connected to the server.
 
@@ -282,8 +303,7 @@ class RTMP(object):
         if not isinstance(packet, RTMPPacket):
             raise ValueError("A RTMPPacket argument is required")
 
-        return librtmp.RTMP_SendPacket(self.rtmp, packet.packet,
-                                       int(queue))
+        return librtmp.RTMP_SendPacket(self.rtmp, packet.packet, int(queue))
 
     def handle_packet(self, packet):
         """Lets librtmp look at a packet and send a response
@@ -294,8 +314,7 @@ class RTMP(object):
 
         return librtmp.RTMP_ClientPacket(self.rtmp, packet.packet)
 
-    def process_packets(self, transaction_id=None, invoked_method=None,
-                        timeout=None):
+    def process_packets(self, transaction_id=None, invoked_method=None, timeout=None):
         """Wait for packets and process them as needed.
 
         :param transaction_id: int, Wait until the result of this
@@ -352,8 +371,7 @@ class RTMP(object):
                     if handler:
                         res = handler(*args)
                         if res is not None:
-                            self.call("_result", res,
-                                      transaction_id=transaction_id_)
+                            self.call("_result", res, transaction_id=transaction_id_)
 
                     if method == invoked_method:
                         self._invoke_args[invoked_method] = args
@@ -394,9 +412,7 @@ class RTMP(object):
         format = params.get("format", PACKET_SIZE_MEDIUM)
         channel = params.get("channel", 0x03)
 
-        packet = RTMPPacket(type=PACKET_TYPE_INVOKE,
-                            format=format, channel=channel,
-                            body=body)
+        packet = RTMPPacket(type=PACKET_TYPE_INVOKE, format=format, channel=channel, body=body)
 
         self.send_packet(packet)
 
@@ -480,8 +496,7 @@ class RTMPCall(object):
         if self.done:
             return self._result
 
-        result = self.conn.process_packets(transaction_id=self.transaction_id,
-                                           timeout=timeout)
+        result = self.conn.process_packets(transaction_id=self.transaction_id, timeout=timeout)
 
         self._result = result
         self.done = True
